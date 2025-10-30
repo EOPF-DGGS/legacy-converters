@@ -18,7 +18,7 @@ class ConverterAccessor:
 
     @cached_property
     def crs(self) -> pyproj.CRS:
-        """The datatree's CRS as a :py:class:`pyproj.CRS` object"""
+        """The EOPF tree's spatial CRS"""
         return pyproj.CRS.from_string(self._infer_crs_code())
 
     def convert_to(self, target_crs: CRSLike) -> xr.DataTree:

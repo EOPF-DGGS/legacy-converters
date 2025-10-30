@@ -18,9 +18,22 @@ class ConverterAccessor:
 
     @cached_property
     def crs(self) -> pyproj.CRS:
+        """The datatree's CRS as a :py:class:`pyproj.CRS` object"""
         return pyproj.CRS.from_string(self._infer_crs_code())
 
     def convert_to(self, target_crs: CRSLike) -> xr.DataTree:
+        """Attach spatial coordinates in the target CRS
+
+        Parameters
+        ----------
+        target_crs : int or str or pyproj.CRS
+            The target CRS, as interpreted by :py:func:`pyproj.CRS.from_user_input`.
+
+        Returns
+        -------
+        xarray.DataTree
+            The current object with new coordinates.
+        """
         transformer = create_transformer(self.crs, target_crs)
 
         return xr.DataTree.from_dict(

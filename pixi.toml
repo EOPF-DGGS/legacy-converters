@@ -15,3 +15,16 @@ healpix-geo = ">=0.0.6,<0.0.7"
 dask = ">=2025.10.0,<2026"
 distributed = ">=2025.10.0,<2026"
 scipy = ">=1.16.3,<2"
+
+[feature.dev.dependencies]
+jupyterlab = "*"
+jupyter-resource-usage = "*"
+ruff-lsp = "*"
+jedi-language-server = "*"
+dask-labextension = "*"
+jupyterlab_code_formatter = ">=3.0.2,<4"
+black = ">=25.1.0,<26"
+isort = ">=7.0.0,<8"
+
+[environments]
+dev = ["dev"]

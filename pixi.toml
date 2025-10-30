@@ -20,6 +20,9 @@ matplotlib = ">=3.10.7,<4"
 cartopy = ">=0.25.0,<0.26"
 pyproj = ">=3.7.2,<4"
 
+[pypi-dependencies]
+legacy-converters = { path = ".", editable = true }
+
 [feature.dev.dependencies]
 jupyterlab = "*"
 jupyter-resource-usage = "*"

@@ -30,5 +30,8 @@ jupyterlab_code_formatter = ">=3.0.2,<4"
 black = ">=25.1.0,<26"
 isort = ">=7.0.0,<8"
 
+[feature.dev.tasks]
+jupyterlab = "jupyter lab"
+
 [environments]
 dev = ["dev"]

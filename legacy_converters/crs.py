@@ -5,10 +5,10 @@ CRSLike = int | str | pyproj.CRS
 
 
 def ensure_crs(crs_like: CRSLike) -> pyproj.CRS:
-    if isinstance(crs_like, int):
-        crs = pyproj.CRS.from_epsg(crs_like)
-    elif isinstance(crs_like, str):
-        crs = pyproj.CRS.from_string(crs_like)
+    crs: pyproj.CRS
+
+    if not isinstance(crs_like, pyproj.CRS):
+        crs = pyproj.CRS.from_user_input(crs_like)
     else:
         crs = crs_like
 

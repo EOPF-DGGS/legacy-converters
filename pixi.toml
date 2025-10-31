@@ -19,6 +19,7 @@ pystac-client = ">=0.9.0,<0.10"
 matplotlib = ">=3.10.7,<4"
 cartopy = ">=0.25.0,<0.26"
 pyproj = ">=3.7.2,<4"
+sparse = ">=0.17.0,<0.18"
 
 [pypi-dependencies]
 legacy-converters = { path = ".", editable = true }

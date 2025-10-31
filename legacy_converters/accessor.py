@@ -19,7 +19,7 @@ class ConverterAccessor:
     @cached_property
     def crs(self) -> pyproj.CRS:
         """The EOPF tree's spatial CRS"""
-        return pyproj.CRS.from_string(self._infer_crs_code())
+        return pyproj.CRS.from_user_input(self._infer_crs_code())
 
     def convert_to(self, target_crs: CRSLike) -> xr.DataTree:
         """Attach spatial coordinates in the target CRS

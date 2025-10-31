@@ -42,3 +42,7 @@ repos:
         args: ["--option", "array_auto_collapse=false"]
       - id: taplo-lint
         args: ["--no-schema"]
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.16.1
+    hooks:
+      - id: zizmor

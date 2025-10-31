@@ -46,3 +46,7 @@ repos:
     rev: v1.16.1
     hooks:
       - id: zizmor
+  - repo: https://github.com/mpalmer/action-validator
+    rev: v0.8.0
+    hooks:
+      - id: action-validator

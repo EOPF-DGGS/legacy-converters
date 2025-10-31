@@ -53,19 +53,31 @@ def test_create_transformer():
                         ["x", "y"],
                         np.array(
                             [
-                                [-5.717306839742361, -4.229038940149932],
-                                [-5.717248714305221, -4.229012618606299],
+                                [-5.717306839742361, -5.717248714305221],
+                                [-4.229038940149932, -4.229012618606299],
                             ]
                         ),
+                        {
+                            "standard_name": "longitude",
+                            "axis": "X",
+                            "long_name": "longitude coordinate",
+                            "units": "degrees_east",
+                        },
                     ),
                     "lat": (
                         ["x", "y"],
                         np.array(
                             [
-                                [48.72069338556936, 48.746188884221624],
-                                [48.71961507426066, 48.745109611036575],
+                                [48.72069338556936, 48.71961507426066],
+                                [48.746188884221624, 48.745109611036575],
                             ]
                         ),
+                        {
+                            "standard_name": "latitude",
+                            "axis": "Y",
+                            "long_name": "latitude coordinate",
+                            "units": "degrees_north",
+                        },
                     ),
                 }
             ),
@@ -80,4 +92,4 @@ def test_maybe_convert(ds, expected):
 
     actual = crs.maybe_convert(ds, transformer)
 
-    xr.testing.assert_equal(actual, expected)
+    xr.testing.assert_identical(actual, expected)

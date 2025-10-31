@@ -38,7 +38,7 @@ class ConverterAccessor:
 
         return xr.DataTree.from_dict(
             {
-                path: maybe_convert(path, node.ds, transformer)
+                path: maybe_convert(node.ds, transformer)
                 for path, node in self._dt.subtree_with_keys
             }
         )

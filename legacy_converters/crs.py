@@ -21,9 +21,7 @@ def create_transformer(source_crs: CRSLike, target_crs: CRSLike) -> pyproj.Trans
     )
 
 
-def maybe_convert(
-    path: str, ds: xr.Dataset, transformer: pyproj.Transformer
-) -> xr.Dataset:
+def maybe_convert(ds: xr.Dataset, transformer: pyproj.Transformer) -> xr.Dataset:
     if not {"x", "y"}.issubset(ds.dims):
         # no spatial dims
         return ds

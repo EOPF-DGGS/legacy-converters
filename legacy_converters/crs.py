@@ -26,7 +26,7 @@ def maybe_convert(ds: xr.Dataset, transformer: pyproj.Transformer) -> xr.Dataset
         # no spatial dims
         return ds
 
-    xx, yy = xr.broadcast(ds["x"], ds["x"])
+    xx, yy = xr.broadcast(ds["x"].drop_indexes("x"), ds["y"].drop_indexes("y"))
 
     axis_names = [ax.abbrev.lower() for ax in transformer.target_crs.axis_info]
     axis_attrs = transformer.target_crs.cs_to_cf()

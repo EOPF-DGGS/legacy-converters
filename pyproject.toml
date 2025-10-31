@@ -6,6 +6,7 @@ dependencies = [
   "xarray>=2025.10.1",
   "numpy>=2",
   "pyproj",
+  "sparse>=0.17",
 ]
 dynamic = ["version"]
 

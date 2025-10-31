@@ -37,5 +37,29 @@ python = "3.13.*"
 [feature.dev.tasks]
 jupyterlab = { cmd = "jupyter lab", cwd = "." }
 
+[feature.tests.dependencies]
+pytest = "*"
+pytest-cov = "*"
+
+[feature.tests.tasks]
+tests = { cmd = "pytest --cov=legacy_converters", cwd = "." }
+
+[feature.ci-py313.dependencies]
+python = "3.13.*"
+
+[feature.ci-py311.dependencies]
+python = "3.11.*"
+
 [environments]
-dev = ["dev"]
+dev = ["tests", "dev"]
+ci-py311 = ["tests", "ci-py311"]
+ci-py313 = ["tests", "ci-py313"]
+
+[tasks.ci-py311]
+depends-on = [{ task = "tests", environment = "ci-py311" }]
+
+[tasks.ci-py313]
+depends-on = [{ task = "tests", environment = "ci-py313" }]
+
+[tasks.ci]
+depends-on = [{ task = "tests", environment = "dev" }]

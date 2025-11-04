@@ -8,6 +8,7 @@ dependencies = [
   "pyproj",
   "sparse>=0.17",
   "affine",
+  "opt-einsum",
 ]
 dynamic = ["version"]
 

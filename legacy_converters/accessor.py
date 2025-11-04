@@ -4,12 +4,13 @@ from functools import cached_property
 
 import pyproj
 import xarray as xr
+from affine import Affine
 
 from legacy_converters.crs import CRSLike, create_transformer, maybe_convert
 
 
 @xr.register_datatree_accessor("grid4earth")
-class ConverterAccessor:
+class DataTreeConverterAccessor:
     def __init__(self, dt: xr.DataTree):
         self._dt = dt
 
@@ -42,3 +43,44 @@ class ConverterAccessor:
                 for path, node in self._dt.subtree_with_keys
             }
         )
+
+
+def _search_attribute(ds, name):
+    values = {
+        var_name: var.attrs[name]
+        for var_name, var in ds.data_vars.items()
+        if name in var.attrs
+    }
+    unique_values = set(values.values())
+    if len(unique_values) > 1:
+        raise ValueError(f"disagreement in {name}")
+
+    return next(iter(unique_values), None)
+
+
+@xr.register_dataset_accessor("grid4earth")
+class DatasetConverterAccessor:
+    def __init__(self, ds: xr.Dataset):
+        self._ds = ds
+
+    def _infer_crs_code(self) -> str:
+        return _search_attribute(self._ds, "proj:epsg")
+
+    def _infer_affine_transform(self) -> Affine:
+        return _search_attribute(self._ds, "proj:transform")
+
+    @cached_property
+    def crs(self) -> pyproj.CRS | None:
+        crs_code = self._infer_crs_code()
+        if crs_code is None:
+            return crs_code
+
+        return pyproj.CRS.from_user_input(crs_code)
+
+    @cached_property
+    def affine_transform(self) -> Affine | None:
+        values = self._infer_affine_transform()
+        if values is None:
+            return None
+
+        return Affine(*values)

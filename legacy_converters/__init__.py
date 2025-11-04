@@ -1,5 +1,8 @@
 import importlib.metadata
 
-from legacy_converters.accessor import ConverterAccessor  # noqa: F401
+from legacy_converters.accessor import (  # noqa: F401
+    DatasetConverterAccessor,
+    DataTreeConverterAccessor,
+)
 
 __version__ = importlib.metadata.version("legacy-converters")

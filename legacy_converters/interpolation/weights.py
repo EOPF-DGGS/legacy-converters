@@ -56,22 +56,61 @@ def nearest_affine(source_grid: xr.Dataset, target_grid: xr.Dataset) -> xr.DataA
     ).assign_coords(target_grid.dggs.coord.coords)
 
 
-def gaussian_weights(source_grid: xr.Dataset, target_grid: xr.Dataset) -> xr.DataArray:
-    """Weights based on a distance-dependent gaussian function
+def bilinear_affine(source_grid: xr.Dataset, target_grid: xr.Dataset) -> xr.DataArray:
+    """Bilinear weights based on the affine transform"""
+    crs_transformer = create_transformer(source_grid.grid4earth.crs, 4326)
 
-    The algorithm first finds the two closest healpix cells on both the northern
-    and southern ring closest to the source point, and assigns the source
-    point's weights for these cells as the gaussian function evaluated at the
-    distance between both cell centers.
-    """
-    # steps:
-    # - find the 4 closest cells in a vectorized way
-    #   - the cdshealpix crate does the following (to be implemented in healpix-geo):
-    #     - find the enclosing cell
-    #     - find all immediate neighbours
-    #     - figure out the quadrant within the enclosing cell
-    #     - choose neighbours depending on the quadrant
-    # - for each, compute the (squared) distance in radians
-    # - transform the distance into weights
-    # - arrange into a sparse matrix
-    pass
+    transform = source_grid.grid4earth.affine_transform(kind="center")
+    nx, ny = source_grid.sizes["x"], source_grid.sizes["y"]
+
+    # TODO: use the grid_info object once that supports ellipsoids
+    cell_ids = target_grid.dggs.coord.data
+    level = target_grid.dggs.grid_info.level
+    lon, lat = healpix_geo.nested.healpix_to_lonlat(
+        cell_ids, depth=level, ellipsoid="WGS84"
+    )
+
+    x, y = crs_transformer.transform(lon, lat, direction="INVERSE")
+
+    pixel_x, pixel_y = ~transform * (x, y)
+
+    valid_points = (pixel_x >= 0) & (pixel_x < nx) & (pixel_y >= 0) & (pixel_y < ny)
+
+    cell_id_indices = np.arange(cell_ids.size)[valid_points]
+
+    valid_x = pixel_x[valid_points]
+    valid_y = pixel_y[valid_points]
+
+    dx = valid_x - np.astype(valid_x, "int64")
+    dy = valid_y - np.astype(valid_y, "int64")
+
+    w11 = (1 - dx) * (1 - dy)
+    w12 = (1 - dx) * dy
+    w21 = dx * (1 - dy)
+    w22 = dx * dy
+
+    raw_weights = np.stack([w11, w12, w21, w22], axis=-1)
+
+    minx, maxx = np.floor(valid_x), np.ceil(valid_x)
+    miny, maxy = np.floor(valid_y), np.ceil(valid_y)
+
+    rows = np.ravel(np.array([minx, minx, maxx, maxx], dtype="uint64"))
+    columns = np.ravel(np.array([miny, maxy, miny, maxy], dtype="uint64"))
+    cell_id_indices = np.repeat(cell_id_indices, 4)
+
+    n_cells = cell_ids.size
+    source_dims = ("x", "y")
+    source_shape = (nx, ny)
+    target_dims = target_grid.dggs.coord.dims
+    target_shape = (n_cells,)
+
+    weights = sparse.COO(
+        coords=[cell_id_indices, rows, columns],
+        data=raw_weights,
+        shape=target_shape + source_shape,
+        fill_value=0,
+    )
+
+    return xr.DataArray(
+        weights, dims=target_dims + source_dims, coords=source_grid[["x", "y"]].coords
+    ).assign_coords(target_grid.dggs.coord.coords)

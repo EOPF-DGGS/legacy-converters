@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import cached_property
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pyproj
@@ -8,6 +9,9 @@ import xarray as xr
 from affine import Affine
 
 from legacy_converters.crs import CRSLike, create_transformer, maybe_convert
+
+if TYPE_CHECKING:
+    import xdggs
 
 
 def _maybe_create_raster_index(ds):
@@ -147,3 +151,30 @@ class DatasetConverterAccessor:
         coords_x, coords_y = transform * (x, y)
 
         return np.stack([coords_x, coords_y], axis=-1)
+
+    def infer_healpix_grid(self, grid_info: xdggs.HealpixInfo) -> xr.Dataset:
+        import healpix_geo
+        import xdggs  # noqa: F401
+
+        if grid_info.indexing_scheme != "nested":
+            raise ValueError(
+                "Rasterizing is only supported for the `nested` indexing scheme."
+            )
+
+        try:
+            mbr = self.minimum_bounding_rectangle()
+        except ValueError as e:
+            raise ValueError(
+                "Can't determine the minimum bounding rectangle"
+                " needed to define the corresponding healpix grid."
+            ) from e
+        transformer = create_transformer(self.crs, 4326)
+        vertices = np.stack(transformer.transform(mbr[:, 0], mbr[:, 1]), axis=-1)
+
+        cell_ids, _, _ = healpix_geo.nested.polygon_search(
+            vertices, grid_info.level, ellipsoid="WGS84", flat=True
+        )
+
+        return xr.Dataset(coords={"cell_ids": ("cells", cell_ids)}).dggs.decode(
+            grid_info
+        )

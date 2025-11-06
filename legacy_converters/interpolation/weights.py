@@ -24,7 +24,7 @@ def nearest_affine(source_grid: xr.Dataset, target_grid: xr.Dataset) -> xr.DataA
     """
     crs_transformer = create_transformer(source_grid.grid4earth.crs, 4326)
 
-    transform = source_grid.grid4earth.affine_transform
+    transform = source_grid.grid4earth.affine_transform(kind="center")
     nx, ny = source_grid.sizes["x"], source_grid.sizes["y"]
 
     # TODO: use the grid_info object once that supports ellipsoids

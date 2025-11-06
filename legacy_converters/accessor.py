@@ -11,6 +11,8 @@ from affine import Affine
 from legacy_converters.crs import CRSLike, create_transformer, maybe_convert
 
 if TYPE_CHECKING:
+    from typing import Literal
+
     import xdggs
 
 
@@ -122,17 +124,29 @@ class DatasetConverterAccessor:
 
         return self._infer_bounding_box()
 
-    @property
-    def affine_transform(self) -> Affine | None:
+    def affine_transform(
+        self, kind: Literal["corner", "center"] | None = None
+    ) -> Affine | None:
+        if kind not in {"corner", "center", None}:
+            raise ValueError(f"Unknown transform kind requested: {kind!r}")
+
         index = self._ds.xindexes.get("x")
         if index is not None and hasattr(index, "transform"):
-            return index.transform()
+            # raster index
+            if kind in ["corner", None]:
+                return index.transform()
+            else:
+                return index.center_transform()
 
         values = self._infer_affine_transform()
         if values is None:
             return None
 
-        return Affine(*values)
+        affine = Affine(*values)
+        if kind in {"corner", None}:
+            return affine * Affine.translation(-0.5, -0.5)
+
+        return affine
 
     def minimum_bounding_rectangle(self) -> np.ndarray:
         transform = self.affine_transform

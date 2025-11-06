@@ -132,6 +132,11 @@ class DatasetConverterAccessor:
 
     def minimum_bounding_rectangle(self) -> np.ndarray:
         transform = self.affine_transform
+        if transform is None:
+            # TODO: what do we do here? Infer from the coordinates?
+            raise ValueError(
+                "no affine transform found, but this is required to compute the MBR."
+            )
 
         nx = self._ds.sizes["x"]
         ny = self._ds.sizes["y"]

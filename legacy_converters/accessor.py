@@ -171,7 +171,7 @@ class DatasetConverterAccessor:
         transformer = create_transformer(self.crs, 4326)
         vertices = np.stack(transformer.transform(mbr[:, 0], mbr[:, 1]), axis=-1)
 
-        cell_ids, _, _ = healpix_geo.nested.polygon_search(
+        cell_ids, _, _ = healpix_geo.nested.polygon_coverage(
             vertices, grid_info.level, ellipsoid="WGS84", flat=True
         )
 

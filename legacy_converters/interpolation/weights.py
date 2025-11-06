@@ -1,8 +1,10 @@
+import healpix_geo
 import numpy as np
-import pyproj
 import sparse
 import xarray as xr
 import xdggs  # noqa: F401
+
+from legacy_converters.crs import create_transformer
 
 
 def nearest_affine(source_grid: xr.Dataset, target_grid: xr.Dataset) -> xr.DataArray:
@@ -20,23 +22,20 @@ def nearest_affine(source_grid: xr.Dataset, target_grid: xr.Dataset) -> xr.DataA
     weights : xarray.DataArray
         The interpolation weights as a sparse matrix.
     """
-    source_crs = source_grid.grid4earth.crs
-    target_crs = pyproj.CRS.from_epsg(4326)
-    crs_transformer = pyproj.Transformer.from_crs(
-        source_crs, target_crs, always_xy=True
-    )
+    crs_transformer = create_transformer(source_grid.grid4earth.crs, 4326)
 
     transform = source_grid.grid4earth.affine_transform
-
-    lon = target_grid["longitude"].data
-    lat = target_grid["latitude"].data
-
     nx, ny = source_grid.sizes["x"], source_grid.sizes["y"]
+
+    # TODO: use the grid_info object once that supports ellipsoids
+    level = target_grid.dggs.grid_info.level
+    lon, lat = healpix_geo.nested.healpix_to_lonlat(
+        target_grid.dggs.coord.data, depth=level, ellipsoid="WGS84"
+    )
 
     x, y = crs_transformer.transform(lon, lat, direction="INVERSE")
 
     pixel_x, pixel_y = ~transform * (x, y)
-
     indices_x = np.round(np.clip(pixel_x, min=0, max=nx - 1)).astype(int)
     indices_y = np.round(np.clip(pixel_y, min=0, max=ny - 1)).astype(int)
 

@@ -74,7 +74,7 @@ class DataTreeConverterAccessor:
         )
 
 
-def _search_attribute(ds, name):
+def _search_attribute(ds: xr.Dataset, name: str) -> int | str | list:
     values = {
         var_name: var.attrs[name]
         for var_name, var in ds.data_vars.items()
@@ -92,10 +92,10 @@ class DatasetConverterAccessor:
     def __init__(self, ds: xr.Dataset):
         self._ds = ds
 
-    def _infer_crs_code(self) -> str:
+    def _infer_crs_code(self) -> str | None:
         return _search_attribute(self._ds, "proj:epsg")
 
-    def _infer_affine_transform(self) -> Affine:
+    def _infer_affine_transform(self) -> Affine | None:
         return _search_attribute(self._ds, "proj:transform")
 
     @cached_property

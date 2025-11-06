@@ -80,11 +80,11 @@ def _search_attribute(ds: xr.Dataset, name: str) -> int | str | list:
         for var_name, var in ds.data_vars.items()
         if name in var.attrs
     }
-    unique_values = set(values.values())
+    unique_values = {tuple(v) if isinstance(v, list) else v for v in values.values()}
     if len(unique_values) > 1:
         raise ValueError(f"disagreement in {name}")
 
-    return next(iter(unique_values), None)
+    return next(iter(values.values()), None)
 
 
 @xr.register_dataset_accessor("grid4earth")

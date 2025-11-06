@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import cached_property
 
+import numpy as np
 import pyproj
 import xarray as xr
 from affine import Affine
@@ -116,6 +117,19 @@ class DatasetConverterAccessor:
             return index.bbox
 
         return self._infer_bounding_box()
+
+    def minimum_bounding_rectangle(self) -> np.ndarray:
+        transform = self.affine_transform
+
+        nx = self._ds.sizes["x"]
+        ny = self._ds.sizes["y"]
+
+        x = np.array([0, nx, nx, 0], dtype="uint64")
+        y = np.array([0, 0, ny, ny], dtype="uint64")
+
+        coords_x, coords_y = transform * (x, y)
+
+        return np.stack([coords_x, coords_y], axis=-1)
 
     @property
     def affine_transform(self) -> Affine | None:

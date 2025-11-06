@@ -98,6 +98,9 @@ class DatasetConverterAccessor:
     def _infer_affine_transform(self) -> Affine | None:
         return _search_attribute(self._ds, "proj:transform")
 
+    def _infer_bounding_box(self) -> str | None:
+        return _search_attribute(self._ds, "proj:bbox")
+
     @cached_property
     def crs(self) -> pyproj.CRS | None:
         crs_code = self._infer_crs_code()
@@ -105,6 +108,14 @@ class DatasetConverterAccessor:
             return crs_code
 
         return pyproj.CRS.from_user_input(crs_code)
+
+    @property
+    def bbox(self) -> tuple[float, ...] | None:
+        index = self._ds.xindexes.get("x")
+        if index is not None and hasattr(index, "xy_dims"):
+            return index.bbox
+
+        return self._infer_bounding_box()
 
     @cached_property
     def affine_transform(self) -> Affine | None:

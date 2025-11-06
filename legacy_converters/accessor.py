@@ -19,8 +19,7 @@ if TYPE_CHECKING:
 def _maybe_create_raster_index(ds):
     import rasterix
 
-    transform = ds.grid4earth.affine_transform
-
+    transform = ds.grid4earth.affine_transform(kind="corner")
     if transform is None:
         return ds
 
@@ -149,7 +148,7 @@ class DatasetConverterAccessor:
         return affine
 
     def minimum_bounding_rectangle(self) -> np.ndarray:
-        transform = self.affine_transform
+        transform = self.affine_transform(kind="corner")
         if transform is None:
             # TODO: what do we do here? Infer from the coordinates?
             raise ValueError(

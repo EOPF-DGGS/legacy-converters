@@ -118,6 +118,18 @@ class DatasetConverterAccessor:
 
         return self._infer_bounding_box()
 
+    @property
+    def affine_transform(self) -> Affine | None:
+        index = self._ds.xindexes.get("x")
+        if index is not None and hasattr(index, "transform"):
+            return index.transform()
+
+        values = self._infer_affine_transform()
+        if values is None:
+            return None
+
+        return Affine(*values)
+
     def minimum_bounding_rectangle(self) -> np.ndarray:
         transform = self.affine_transform
 
@@ -130,15 +142,3 @@ class DatasetConverterAccessor:
         coords_x, coords_y = transform * (x, y)
 
         return np.stack([coords_x, coords_y], axis=-1)
-
-    @property
-    def affine_transform(self) -> Affine | None:
-        index = self._ds.xindexes.get("x")
-        if index is not None and hasattr(index, "transform"):
-            return index.transform()
-
-        values = self._infer_affine_transform()
-        if values is None:
-            return None
-
-        return Affine(*values)

@@ -74,7 +74,9 @@ def bilinear_affine(source_grid: xr.Dataset, target_grid: xr.Dataset) -> xr.Data
 
     pixel_x, pixel_y = ~transform * (x, y)
 
-    valid_points = (pixel_x >= 0) & (pixel_x < nx) & (pixel_y >= 0) & (pixel_y < ny)
+    valid_points = (
+        (pixel_x >= 0) & (pixel_x <= nx - 1) & (pixel_y >= 0) & (pixel_y <= ny - 1)
+    )
 
     cell_id_indices = np.arange(cell_ids.size)[valid_points]
 
@@ -89,14 +91,27 @@ def bilinear_affine(source_grid: xr.Dataset, target_grid: xr.Dataset) -> xr.Data
     w21 = dx * (1 - dy)
     w22 = dx * dy
 
-    raw_weights = np.stack([w11, w12, w21, w22], axis=-1)
+    raw_weights = np.ravel(np.stack([w11, w12, w21, w22], axis=-1))
 
     minx, maxx = np.floor(valid_x), np.ceil(valid_x)
     miny, maxy = np.floor(valid_y), np.ceil(valid_y)
 
-    rows = np.ravel(np.array([minx, minx, maxx, maxx], dtype="uint64"))
-    columns = np.ravel(np.array([miny, maxy, miny, maxy], dtype="uint64"))
-    cell_id_indices = np.repeat(cell_id_indices, 4)
+    neighbours = np.array(
+        [
+            [minx, miny],
+            [minx, maxy],
+            [maxx, miny],
+            [maxx, maxy],
+        ],
+        dtype="int64",
+    )
+    indices = np.moveaxis(neighbours, -1, 0)
+    rows = np.ravel(indices[:, :, 0])
+    columns = np.ravel(indices[:, :, 1])
+
+    cell_id_indices = np.ravel(
+        np.broadcast_to(cell_id_indices[:, None], (valid_x.size, 4))
+    )
 
     n_cells = cell_ids.size
     source_dims = ("x", "y")

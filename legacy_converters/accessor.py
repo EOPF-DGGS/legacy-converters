@@ -9,6 +9,32 @@ from affine import Affine
 from legacy_converters.crs import CRSLike, create_transformer, maybe_convert
 
 
+def _maybe_create_raster_index(ds):
+    import rasterix
+
+    transform = ds.grid4earth.affine_transform
+
+    if transform is None:
+        return ds
+
+    x_dim = "x"
+    y_dim = "y"
+    width = ds.sizes[x_dim]
+    height = ds.sizes[y_dim]
+
+    raster_index = rasterix.RasterIndex.from_transform(
+        transform,
+        width=width,
+        height=height,
+        x_dim=x_dim,
+        y_dim=y_dim,
+    )
+
+    coords = xr.Coordinates.from_xindex(raster_index)
+
+    return ds.assign_coords(coords)
+
+
 @xr.register_datatree_accessor("grid4earth")
 class DataTreeConverterAccessor:
     def __init__(self, dt: xr.DataTree):
@@ -21,6 +47,9 @@ class DataTreeConverterAccessor:
     def crs(self) -> pyproj.CRS:
         """The EOPF tree's spatial CRS"""
         return pyproj.CRS.from_user_input(self._infer_crs_code())
+
+    def create_raster_indexes(self):
+        return self._dt.map_over_datasets(_maybe_create_raster_index)
 
     def convert_to(self, target_crs: CRSLike) -> xr.DataTree:
         """Attach spatial coordinates in the target CRS
